@@ -1,42 +1,56 @@
-import { ApiResponse, getTitles, Title } from '@/services';
+import { getTitlesByGenre, Title } from '@/services';
 import { useEffect, useState } from 'react';
-import { FlatList, Image, ScrollView, View } from 'react-native';
-import { Text } from 'src/components/ui/text';
+import { Dimensions, FlatList, Image, View } from 'react-native';
+import { Text } from '@/components/ui/text';
 
 export default function HomeScreen() {
-  const [data, setData] = useState<ApiResponse | null>(null);
+  const [moviesByGenre, setMoviesByGenre] = useState<{
+    [key: string]: Title[]; //objeto dinamico
+  }>({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  const genreList = ['Action', 'Comedy', 'Drama', 'Horror', 'Romance'];
+
   useEffect(() => {
-    async function fetchTitles() {
+    async function fetchAllGenres() {
       try {
         setLoading(true);
-        setError('');
-        const response = await getTitles();
-        setData(response);
+        const result: { [key: string]: Title[] } = {};
+
+        const promises = genreList.map(async (genre) => {
+          try {
+            const response = await getTitlesByGenre(genre);
+            return { genre, titles: response.titles };
+          } catch {
+            return { genre, titles: [] };
+          }
+        });
+
+        const responses = await Promise.all(promises);
+        responses.forEach(({ genre, titles }) => {
+          result[genre] = titles;
+        });
+
+        setMoviesByGenre(result);
       } catch {
-        setError('Títulos não encontrado');
+        setError('Erro ao buscar filmes');
       } finally {
         setLoading(false);
       }
     }
 
-    fetchTitles();
+    fetchAllGenres();
   }, []);
 
   if (loading) return <Text>Carregando...</Text>;
   if (error) return <Text>{error}</Text>;
 
-  const genres = data
-    ? Array.from(new Set(data.titles.flatMap((title) => title.genres || [])))
-    : [];
-
-  const featureMovies = data?.titles.slice(0, 5) || [];
+  const featureMovies = moviesByGenre['Action']?.slice(0, 5) || [];
 
   return (
     <FlatList
-      data={genres}
+      data={genreList}
       keyExtractor={(genre) => genre}
       showsVerticalScrollIndicator={false}
       ListHeaderComponent={() => (
@@ -46,11 +60,23 @@ export default function HomeScreen() {
           horizontal
           pagingEnabled
           showsHorizontalScrollIndicator={false}
+          snapToInterval={Dimensions.get('window').width}
+          decelerationRate="fast"
           renderItem={({ item }) => (
-            <View>
-              <Image source={{ uri: item.primaryImage?.url }} className="h-[200] w-full" />
-              <Text className="text-lg font-bold text-white">{item.originalTitle}</Text>
-              <Text className="text-white">{item.genres?.join(', ')}</Text>
+            <View style={{ width: Dimensions.get('window').width }}>
+              <Image
+                source={{ uri: item.primaryImage?.url }}
+                className="h-[500px] w-full"
+                resizeMode="contain"
+              />
+              <View className="px-6 py-4">
+                <Text className="text-2xl font-bold text-white mb-2">
+                  {item.originalTitle}
+                </Text>
+                <Text className="text-sm text-gray-300">
+                  {item.genres?.join(' • ')}
+                </Text>
+              </View>
             </View>
           )}
         />
@@ -60,7 +86,7 @@ export default function HomeScreen() {
           <Text className="mb-2 text-lg font-bold">{genre}</Text>
 
           <FlatList
-            data={data?.titles.filter((title) => title.genres?.includes(genre))}
+            data={moviesByGenre[genre]}
             keyExtractor={(item) => item.id}
             horizontal
             showsHorizontalScrollIndicator={false}
