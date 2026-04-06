@@ -1,6 +1,6 @@
-import { ApiResponse, getTitles } from '@/services';
+import { ApiResponse, getTitles, Title } from '@/services';
 import { useEffect, useState } from 'react';
-import { FlatList, Image, View } from 'react-native';
+import { FlatList, Image, ScrollView, View } from 'react-native';
 import { Text } from 'src/components/ui/text';
 
 export default function HomeScreen() {
@@ -28,23 +28,55 @@ export default function HomeScreen() {
   if (loading) return <Text>Carregando...</Text>;
   if (error) return <Text>{error}</Text>;
 
+  const genres = data
+    ? Array.from(new Set(data.titles.flatMap((title) => title.genres || [])))
+    : [];
+
+  const featureMovies = data?.titles.slice(0, 5) || [];
+
   return (
-    <View>
-      <FlatList
-        data={data?.titles}
-        keyExtractor={(item) => item.id}
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        renderItem={({ item }) => (
-          <View style={{ marginRight: 12 }}>
-            <Image
-              source={{ uri: item.primaryImage?.url }}
-              style={{ width: 120, height: 180, borderRadius: 8 }}
-            />
-            <Text>{item.originalTitle}</Text>
-          </View>
-        )}
-      />
-    </View>
+    <FlatList
+      data={genres}
+      keyExtractor={(genre) => genre}
+      showsVerticalScrollIndicator={false}
+      ListHeaderComponent={() => (
+        <FlatList
+          data={featureMovies}
+          keyExtractor={(item) => item.id}
+          horizontal
+          pagingEnabled
+          showsHorizontalScrollIndicator={false}
+          renderItem={({ item }) => (
+            <View>
+              <Image source={{ uri: item.primaryImage?.url }} className="h-[200] w-full" />
+              <Text className="text-lg font-bold text-white">{item.originalTitle}</Text>
+              <Text className="text-white">{item.genres?.join(', ')}</Text>
+            </View>
+          )}
+        />
+      )}
+      renderItem={({ item: genre }) => (
+        <View className="mb-4">
+          <Text className="mb-2 text-lg font-bold">{genre}</Text>
+
+          <FlatList
+            data={data?.titles.filter((title) => title.genres?.includes(genre))}
+            keyExtractor={(item) => item.id}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{ gap: 10, paddingHorizontal: 16 }}
+            renderItem={({ item }) => (
+              <View className="w-[120px]">
+                <Image
+                  source={{ uri: item.primaryImage?.url }}
+                  className="h-[180] w-[120px] rounded-lg"
+                />
+                <Text numberOfLines={1}>{item.originalTitle}</Text>
+              </View>
+            )}
+          />
+        </View>
+      )}
+    />
   );
 }
