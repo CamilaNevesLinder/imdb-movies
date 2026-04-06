@@ -25,12 +25,11 @@ export type ApiResponse = {
   nextPageToken?: string;
 };
 
-export async function getTitles(): Promise<ApiResponse> {
-  const response = await fetch('https://api.imdbapi.dev/titles');
+export async function getTitlesByGenre(genre: string): Promise<ApiResponse> {
+  const response = await fetch(`https://api.imdbapi.dev/titles?genres=${genre}`);
 
   if (!response.ok) {
     throw new Error('Erro ao buscar filmes');
   }
-
   return response.json();
 }
