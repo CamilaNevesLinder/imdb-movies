@@ -33,3 +33,12 @@ export async function getTitlesByGenre(genre: string): Promise<ApiResponse> {
   }
   return response.json();
 }
+
+export async function getTitleById(id: string): Promise<Title> {
+  const response = await fetch(`https://api.imdbapi.dev/titles/${id}`);
+
+  if (!response.ok) {
+    throw new Error('Erro ao buscar filmes por ID');
+  }
+  return response.json();
+}

@@ -1,14 +1,16 @@
 import { getTitlesByGenre, Title } from '@/services';
 import { useEffect, useState } from 'react';
-import { Dimensions, FlatList, Image, View } from 'react-native';
+import { Dimensions, FlatList, Image, Pressable, View } from 'react-native';
 import { Text } from '@/components/ui/text';
+import { router } from 'expo-router';
+import { appStore } from '@/stores';
 
 export default function HomeScreen() {
   const [moviesByGenre, setMoviesByGenre] = useState<{
     [key: string]: Title[]; //objeto dinamico
   }>({});
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+
+  const { loading, error, setLoading, setError } = appStore();
 
   const genreList = ['Action', 'Comedy', 'Drama', 'Horror', 'Romance'];
 
@@ -63,21 +65,27 @@ export default function HomeScreen() {
           snapToInterval={Dimensions.get('window').width}
           decelerationRate="fast"
           renderItem={({ item }) => (
-            <View style={{ width: Dimensions.get('window').width }}>
+            <Pressable
+              onPress={() =>
+                router.push({
+                  pathname: './movies-details[id]',
+                  params: {
+                    id: item.id,
+                    movie: JSON.stringify(item),
+                  },
+                })
+              }
+              style={{ width: Dimensions.get('window').width }}>
               <Image
                 source={{ uri: item.primaryImage?.url }}
                 className="h-[500px] w-full"
                 resizeMode="contain"
               />
               <View className="px-6 py-4">
-                <Text className="text-2xl font-bold text-white mb-2">
-                  {item.originalTitle}
-                </Text>
-                <Text className="text-sm text-gray-300">
-                  {item.genres?.join(' • ')}
-                </Text>
+                <Text className="mb-2 text-2xl font-bold text-white">{item.originalTitle}</Text>
+                <Text className="text-sm text-gray-300">{item.genres?.join(' • ')}</Text>
               </View>
-            </View>
+            </Pressable>
           )}
         />
       )}
@@ -92,13 +100,22 @@ export default function HomeScreen() {
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={{ gap: 10, paddingHorizontal: 16 }}
             renderItem={({ item }) => (
-              <View className="w-[120px]">
+              <Pressable
+                onPress={() =>
+                  router.push({
+                    pathname: '/movies/[id]',
+                    params: {
+                      id: item.id,
+                    },
+                  })
+                }
+                className="w-[120px]">
                 <Image
                   source={{ uri: item.primaryImage?.url }}
                   className="h-[180] w-[120px] rounded-lg"
                 />
                 <Text numberOfLines={1}>{item.originalTitle}</Text>
-              </View>
+              </Pressable>
             )}
           />
         </View>
