@@ -36,13 +36,13 @@ export default function MovieDetails() {
 
   return (
     <View className="p-4">
-      <Image source={{ uri: movie.primaryImage?.url }} className="h-[300px] w-full rounded-lg" />
+      <Image source={{ uri: movie.primaryImage?.url }} className="h-[550px] w-full rounded-lg" />
 
-      <Text className="mt-4 text-2xl font-bold">{movie.originalTitle}</Text>
+      <Text className="mt-2 text-2xl font-bold">{movie.originalTitle}</Text>
 
       <Text className="mt-2 text-gray-400">{movie.genres?.join(' • ')}</Text>
 
-      <Text className="mt-4">{movie.plot}</Text>
+      <Text className="mt-2">{movie.plot}</Text>
     </View>
   );
 }

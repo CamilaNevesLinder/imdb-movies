@@ -4,13 +4,14 @@ import { Dimensions, FlatList, Image, Pressable, View } from 'react-native';
 import { Text } from '@/components/ui/text';
 import { router } from 'expo-router';
 import { appStore } from '@/stores';
+import { Plus, BookmarkCheck } from 'lucide-react-native';
 
 export default function HomeScreen() {
   const [moviesByGenre, setMoviesByGenre] = useState<{
-    [key: string]: Title[]; //objeto dinamico
+    [key: string]: Title[];
   }>({});
 
-  const { loading, error, setLoading, setError } = appStore();
+  const { loading, error, setLoading, setError, addToList } = appStore();
 
   const genreList = ['Action', 'Comedy', 'Drama', 'Horror', 'Romance'];
 
@@ -18,9 +19,8 @@ export default function HomeScreen() {
     async function fetchAllGenres() {
       try {
         setLoading(true);
-        const result: { [key: string]: Title[] } = {};
-
-        const promises = genreList.map(async (genre) => {
+        const moviesGroupByGenre: { [key: string]: Title[] } = {};
+        const genresRequest = genreList.map(async (genre) => {
           try {
             const response = await getTitlesByGenre(genre);
             return { genre, titles: response.titles };
@@ -29,12 +29,12 @@ export default function HomeScreen() {
           }
         });
 
-        const responses = await Promise.all(promises);
+        const responses = await Promise.all(genresRequest);
         responses.forEach(({ genre, titles }) => {
-          result[genre] = titles;
+          moviesGroupByGenre[genre] = titles;
         });
 
-        setMoviesByGenre(result);
+        setMoviesByGenre(moviesGroupByGenre);
       } catch {
         setError('Erro ao buscar filmes');
       } finally {
@@ -51,7 +51,15 @@ export default function HomeScreen() {
   const featureMovies = moviesByGenre['Action']?.slice(0, 5) || [];
 
   return (
-    <FlatList
+    <View className="flex-1">
+      <View className="flex-row justify-between items-center px-6 py-4 bg-black">
+        <Text className="text-2xl font-bold text-white">Filmes</Text>
+        <Pressable onPress={() => router.push('/movies/my-list')}>
+          <BookmarkCheck color="white" size={28} />
+        </Pressable>
+      </View>
+
+      <FlatList
       data={genreList}
       keyExtractor={(genre) => genre}
       showsVerticalScrollIndicator={false}
@@ -68,7 +76,7 @@ export default function HomeScreen() {
             <Pressable
               onPress={() =>
                 router.push({
-                  pathname: './movies-details[id]',
+                  pathname: '/movies/[id]',
                   params: {
                     id: item.id,
                     movie: JSON.stringify(item),
@@ -82,7 +90,17 @@ export default function HomeScreen() {
                 resizeMode="contain"
               />
               <View className="px-6 py-4">
-                <Text className="mb-2 text-2xl font-bold text-white">{item.originalTitle}</Text>
+                <View className="flex-row items-center justify-between">
+                  <Text className="text-2xl font-bold text-white flex-1">
+                    {item.originalTitle}
+                  </Text>
+                  <Pressable
+                    onPress={() => addToList(item)}
+                    className="active:scale-90 transition-transform"
+                  >
+                    <Plus color="white" size={24} />
+                  </Pressable>
+                </View>
                 <Text className="text-sm text-gray-300">{item.genres?.join(' • ')}</Text>
               </View>
             </Pressable>
@@ -115,11 +133,18 @@ export default function HomeScreen() {
                   className="h-[180] w-[120px] rounded-lg"
                 />
                 <Text numberOfLines={1}>{item.originalTitle}</Text>
+                <Pressable
+                  onPress={() => addToList(item)}
+                  className="active:scale-90 transition-transform"
+                >
+                  <Plus color="white" size={16} />
+                </Pressable>
               </Pressable>
             )}
           />
         </View>
       )}
-    />
+      />
+    </View>
   );
 }
