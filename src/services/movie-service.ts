@@ -42,3 +42,11 @@ export async function getTitleById(id: string): Promise<Title> {
   }
   return response.json();
 }
+
+// export async function getReleaseDates(releaseDates: number) {
+//   const response = await fetch(`https://api.imdbapi.dev/titles/${releaseDates}`);
+//   if (!response.ok) {
+//     throw new Error('Erro ao buscar data de lançamento');
+//   }
+//   return response.json();
+// }
