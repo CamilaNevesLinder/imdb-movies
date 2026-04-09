@@ -43,10 +43,34 @@ export async function getTitleById(id: string): Promise<Title> {
   return response.json();
 }
 
-// export async function getReleaseDates(releaseDates: number) {
-//   const response = await fetch(`https://api.imdbapi.dev/titles/${releaseDates}`);
-//   if (!response.ok) {
-//     throw new Error('Erro ao buscar data de lançamento');
-//   }
-//   return response.json();
-// }
+export async function getSeasons(titleId: string) {
+  const response = await fetch(`https://api.imdbapi.dev/titles/${titleId}/seasons`);
+
+  if (!response.ok) {
+    throw new Error('Erro ao buscar temporadas');
+  }
+
+  return response.json();
+}
+
+export async function getEpisodes(titleId: string, season: string) {
+  const response = await fetch(
+    `https://api.imdbapi.dev/titles/${titleId}/episodes?season=${season}`
+  );
+
+  if (!response.ok) {
+    throw new Error('Erro ao buscar episodios');
+  }
+
+  return response.json();
+}
+
+export async function getImages(titleId: string) {
+  const response = await fetch(`https://api.imdbapi.dev/titles/${titleId}/images`);
+
+  if (!response.ok) {
+    throw new Error('Erro ao buscar imagens');
+  }
+
+  return response.json();
+}
